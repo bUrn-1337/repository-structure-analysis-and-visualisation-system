@@ -1,0 +1,71 @@
+/* ============================================================
+   Design Tokens & Global Reset
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Surface */
+  --bg-void:        #07070f;
+  --bg-base:        #0d0d1a;
+  --bg-surface:     #13131f;
+  --bg-raised:      #1a1a2e;
+  --bg-overlay:     rgba(13, 13, 26, 0.82);
+
+  /* Brand */
+  --accent-1:       #7c3aed;   /* violet-600 */
+  --accent-2:       #a855f7;   /* purple-500 */
+  --accent-glow:    rgba(124, 58, 237, 0.35);
+  --accent-glow-sm: rgba(124, 58, 237, 0.18);
+
+  /* Semantic */
+  --cyan:           #22d3ee;
+  --emerald:        #34d399;
+  --amber:          #fbbf24;
+  --rose:           #fb7185;
+  --sky:            #38bdf8;
+
+  /* Text */
+  --text-primary:   #e8e8f4;
+  --text-secondary: #9090b0;
+  --text-muted:     #555575;
+
+  /* Borders */
+  --border-subtle:  rgba(124, 58, 237, 0.15);
+  --border-bright:  rgba(124, 58, 237, 0.45);
+
+  /* Misc */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  22px;
+  --shadow-glow: 0 0 28px rgba(124, 58, 237, 0.28), 0 2px 8px rgba(0,0,0,0.55);
+  --transition:  all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb  { background: var(--accent-1); border-radius: 3px; }
+
+/* ── Utility ── */
+.truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

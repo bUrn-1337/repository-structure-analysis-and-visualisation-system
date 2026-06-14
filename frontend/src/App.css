@@ -1,0 +1,128 @@
+/* App.css */
+
+/* ── Shell layout ── */
+.app-shell {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-void);
+}
+
+/* ── Canvas area ── */
+.canvas-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── React Flow overrides ── */
+.rf-canvas {
+  background: var(--bg-void) !important;
+}
+
+/* Controls widget */
+.rf-controls,
+.react-flow__controls {
+  background: rgba(13, 13, 26, 0.88) !important;
+  border: 1px solid rgba(124, 58, 237, 0.2) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(14px) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+  overflow: hidden;
+  bottom: 24px !important;
+  left: 18px !important;
+}
+.react-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.12) !important;
+  color: #555575 !important;
+  fill: #555575 !important;
+  width: 30px !important;
+  height: 30px !important;
+  transition: color 0.2s, fill 0.2s, background 0.2s !important;
+}
+.react-flow__controls-button:last-child { border-bottom: none !important; }
+.react-flow__controls-button:hover {
+  background: rgba(124, 58, 237, 0.12) !important;
+  color: #a855f7 !important;
+  fill: #a855f7 !important;
+}
+
+/* MiniMap widget */
+.rf-minimap,
+.react-flow__minimap {
+  background: rgba(13, 13, 26, 0.88) !important;
+  border: 1px solid rgba(124, 58, 237, 0.18) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(14px) !important;
+  overflow: hidden;
+  bottom: 24px !important;
+  right: 18px !important;
+}
+
+/* Attribution */
+.react-flow__attribution {
+  background: transparent !important;
+  color: #222236 !important;
+  font-size: 9px !important;
+}
+
+/* Stats panel pill */
+.stats-panel { bottom: 24px !important; left: 90px !important; }
+.stats-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: rgba(13, 13, 26, 0.85);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 99px;
+  font-size: 11px;
+  color: #555575;
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
+}
+
+/* ── Empty canvas state ── */
+.canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.canvas-empty__orb {
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.canvas-empty__icon {
+  width: 80px;
+  height: 80px;
+  opacity: 0.7;
+}
+
+.canvas-empty__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2a2a45;
+}
+
+.canvas-empty__sub {
+  font-size: 12.5px;
+  color: #222236;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.65;
+}
+.canvas-empty__sub strong { color: #333355; font-weight: 600; }
