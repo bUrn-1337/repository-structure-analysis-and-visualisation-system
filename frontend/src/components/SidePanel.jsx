@@ -1,18 +1,11 @@
 /**
  * SidePanel.jsx – Collapsible right panel for selected-file details + AI summary.
  *
- * AI summary renders in three states:
- *   loading → shimmer bars (same animation as the old placeholder)
- *   success → plain-text 3-sentence summary (JSX text only, never innerHTML)
- *   error   → subtle error message + retry button
- *
- * Security: All dynamic data is rendered via React JSX text interpolation —
- * never via dangerouslySetInnerHTML (CWE-79).
+ * Security: Escapes details rendering via React JSX text content interpolation.
  */
-import { X, FileCode2, Hash, Tag, Sparkles, ChevronRight, RefreshCw, Zap } from 'lucide-react';
+import { X, FileCode2, Hash, Tag, Sparkles, ChevronRight, RefreshCw, Zap, Flame } from 'lucide-react';
 import './SidePanel.css';
 
-/** Map language identifier → human-readable label */
 const LANG_LABELS = {
   python:     'Python',
   c:          'C',
@@ -39,17 +32,6 @@ const LANG_LABELS = {
   css:        'CSS',
 };
 
-/**
- * @param {{
- *   isOpen:    boolean,
- *   onClose:   () => void,
- *   fileData:  { path: string, label: string, loc: number, fileType: string } | null,
- *   aiSummary: { text: string, sha256: string, cached: boolean } | null,
- *   aiLoading: boolean,
- *   aiError:   string | null,
- *   onRetry:   () => void,
- * }} props
- */
 export default function SidePanel({
   isOpen,
   onClose,
@@ -61,7 +43,6 @@ export default function SidePanel({
 }) {
   return (
     <>
-      {/* Collapse toggle tab — always visible */}
       <button
         id="side-panel-toggle"
         className={`panel-tab ${isOpen ? 'panel-tab--open' : ''}`}
@@ -79,13 +60,11 @@ export default function SidePanel({
         />
       </button>
 
-      {/* Panel drawer */}
       <aside
         className={`side-panel ${isOpen ? 'side-panel--open' : ''}`}
         aria-label="File details panel"
         role="complementary"
       >
-        {/* Header */}
         <div className="panel-header">
           <div className="panel-header__title">
             <FileCode2 size={15} strokeWidth={1.8} className="panel-header__icon" />
@@ -101,7 +80,6 @@ export default function SidePanel({
           </button>
         </div>
 
-        {/* Content */}
         <div className="panel-body">
           {fileData ? (
             <>
@@ -141,10 +119,20 @@ export default function SidePanel({
                 </div>
               </div>
 
-              {/* Divider */}
+              {/* Churn Hotspot Section */}
+              <div className="panel-stat" style={{ background: fileData.churn >= 10 ? 'rgba(249, 115, 22, 0.08)' : undefined, borderColor: fileData.churn >= 10 ? 'rgba(249, 115, 22, 0.25)' : undefined }}>
+                <div className="panel-section__label">
+                  <Flame size={11} style={{ color: fileData.churn >= 10 ? '#f97316' : '#555575' }} />
+                  <span>Git Modifications</span>
+                </div>
+                <p className="panel-stat__value" style={{ color: fileData.churn >= 10 ? '#f97316' : undefined }}>
+                  {fileData.churn ?? 0} {fileData.churn === 1 ? 'commit' : 'commits'}
+                </p>
+              </div>
+
               <div className="panel-divider" />
 
-              {/* ── AI Summary section ─────────────────────────────────────── */}
+              {/* AI Section */}
               <section className="panel-section panel-ai">
                 <div className="panel-section__label panel-ai__label">
                   <Sparkles size={12} strokeWidth={2} />
@@ -156,11 +144,10 @@ export default function SidePanel({
                     </span>
                   )}
                   {!aiSummary && !aiLoading && !aiError && (
-                    <span className="panel-ai__badge">powered by GPT</span>
+                    <span className="panel-ai__badge">powered by Gemini</span>
                   )}
                 </div>
 
-                {/* ── Loading state: shimmer bars ── */}
                 {aiLoading && (
                   <div className="panel-ai__placeholder" aria-label="Loading AI summary" aria-busy="true">
                     <div className="panel-ai__shimmer" />
@@ -169,7 +156,6 @@ export default function SidePanel({
                   </div>
                 )}
 
-                {/* ── Error state: message + retry ── */}
                 {!aiLoading && aiError && (
                   <div className="panel-ai__error" role="alert">
                     <p className="panel-ai__error-text">{aiError}</p>
@@ -185,9 +171,6 @@ export default function SidePanel({
                   </div>
                 )}
 
-                {/* ── Success state: plain-text summary ──
-                    Security: rendered via JSX textContent — never innerHTML.
-                    The AI response is treated as untrusted plain text. ── */}
                 {!aiLoading && !aiError && aiSummary && (
                   <div className="panel-ai__result">
                     <p className="panel-ai__summary-text">{aiSummary.text}</p>
@@ -197,7 +180,6 @@ export default function SidePanel({
                   </div>
                 )}
 
-                {/* ── Idle state: hint before first click ── */}
                 {!aiLoading && !aiError && !aiSummary && (
                   <div className="panel-ai__placeholder">
                     <div className="panel-ai__shimmer" style={{ opacity: 0.12 }} />
@@ -210,7 +192,6 @@ export default function SidePanel({
               </section>
             </>
           ) : (
-            /* Empty state */
             <div className="panel-empty">
               <FileCode2 size={36} strokeWidth={1} className="panel-empty__icon" />
               <p className="panel-empty__title">No file selected</p>

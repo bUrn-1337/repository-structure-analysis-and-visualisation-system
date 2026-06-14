@@ -1,0 +1,43 @@
+/* DirectoryNode.css */
+.directory-node {
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed rgba(124, 58, 237, 0.22);
+  border-radius: 12px;
+  background: rgba(13, 13, 26, 0.12);
+  backdrop-filter: blur(4px);
+  pointer-events: none; /* Allows canvas clicks to pass through to child nodes */
+  position: relative;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.directory-node__header {
+  position: absolute;
+  top: -12px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #151528;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #c084fc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: auto; /* Re-enables interaction on the header label itself */
+  z-index: 10;
+}
+
+.directory-node__icon {
+  color: #a855f7;
+  flex-shrink: 0;
+}
+
+/* Bounding box hover highlights */
+.directory-node:hover {
+  border-color: rgba(168, 85, 247, 0.45);
+  background: rgba(124, 58, 237, 0.04);
+}

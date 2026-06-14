@@ -1,43 +1,69 @@
 /**
- * layout.js – Automatic graph layout using Dagre.
- *
- * Security note: No user input is passed to any system command or eval.
- * All values are numeric/string data derived from the scan result.
+ * layout.js – Automatic graph layout using Dagre with compound directory nodes.
  */
 import dagre from '@dagrejs/dagre';
 
 const NODE_WIDTH  = 200;
 const NODE_HEIGHT =  60;
 
-/**
- * Apply a left-to-right Dagre layout to React Flow nodes + edges.
- * Returns new arrays with `position` filled in on each node.
- *
- * @param {import('@xyflow/react').Node[]} nodes
- * @param {import('@xyflow/react').Edge[]} edges
- * @returns {{ nodes: import('@xyflow/react').Node[], edges: import('@xyflow/react').Edge[] }}
- */
 export function applyDagreLayout(nodes, edges) {
-  const g = new dagre.graphlib.Graph();
+  const g = new dagre.graphlib.Graph({ compound: true });
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'LR', ranksep: 90, nodesep: 50 });
+  g.setGraph({ rankdir: 'LR', ranksep: 110, nodesep: 60 });
 
-  nodes.forEach((n) =>
-    g.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
-  );
+  nodes.forEach((n) => {
+    const isDir = n.type === 'directoryNode';
+    g.setNode(n.id, {
+      width: isDir ? 100 : NODE_WIDTH,
+      height: isDir ? 100 : NODE_HEIGHT,
+    });
+  });
+
+  nodes.forEach((n) => {
+    if (n.parentId) {
+      g.setParent(n.id, n.parentId);
+    }
+  });
+
   edges.forEach((e) => g.setEdge(e.source, e.target));
 
   dagre.layout(g);
 
   const laidOutNodes = nodes.map((n) => {
     const pos = g.node(n.id);
-    return {
-      ...n,
-      position: {
-        x: pos.x - NODE_WIDTH / 2,
-        y: pos.y - NODE_HEIGHT / 2,
-      },
+    const isDir = n.type === 'directoryNode';
+    const width = isDir ? pos.width : NODE_WIDTH;
+    const height = isDir ? pos.height : NODE_HEIGHT;
+
+    let position = {
+      x: pos.x - width / 2,
+      y: pos.y - height / 2,
     };
+
+    if (n.parentId) {
+      const parentPos = g.node(n.parentId);
+      const parentX = parentPos.x - parentPos.width / 2;
+      const parentY = parentPos.y - parentPos.height / 2;
+
+      position = {
+        x: position.x - parentX,
+        y: position.y - parentY,
+      };
+    }
+
+    const nodeData = {
+      ...n,
+      position,
+    };
+
+    if (isDir) {
+      nodeData.style = {
+        width,
+        height,
+      };
+    }
+
+    return nodeData;
   });
 
   return { nodes: laidOutNodes, edges };

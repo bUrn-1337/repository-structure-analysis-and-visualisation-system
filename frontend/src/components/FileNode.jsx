@@ -1,27 +1,24 @@
 /**
- * FileNode.jsx – Custom React Flow node for a single source file.
- *
- * Security: All text is rendered via React JSX (textContent equivalent),
- * never via dangerouslySetInnerHTML.
+ * FileNode.jsx – Custom React Flow node for source files displaying Hotspot badges.
  */
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import { Flame } from 'lucide-react';
 import './FileNode.css';
 
-/** Map file-type strings → badge colour token */
 const TYPE_COLOUR = {
-  python:      '#a78bfa',  /* violet  */
-  c:           '#fb923c',  /* orange  */
+  python:      '#a78bfa',
+  c:           '#fb923c',
   cpp:         '#f97316',
   c_header:    '#fdba74',
   cpp_header:  '#fcd34d',
-  javascript:  '#facc15',  /* yellow  */
-  typescript:  '#38bdf8',  /* sky     */
-  java:        '#4ade80',  /* green   */
-  go:          '#22d3ee',  /* cyan    */
-  rust:        '#fb7185',  /* rose    */
+  javascript:  '#facc15',
+  typescript:  '#38bdf8',
+  java:        '#4ade80',
+  go:          '#22d3ee',
+  rust:        '#fb7185',
   ruby:        '#f43f5e',
-  php:         '#818cf8',  /* indigo  */
+  php:         '#818cf8',
   csharp:      '#a3e635',
   kotlin:      '#34d399',
   swift:       '#f87171',
@@ -37,9 +34,10 @@ const TYPE_COLOUR = {
 
 const FileNode = memo(({ data, selected }) => {
   const colour = TYPE_COLOUR[data.fileType] ?? '#9090b0';
+  const isHotspot = data.churn >= 10;
 
   return (
-    <div className={`file-node ${selected ? 'file-node--selected' : ''}`}>
+    <div className={`file-node ${selected ? 'file-node--selected' : ''} ${isHotspot ? 'file-node--hotspot' : ''}`}>
       <Handle type="target" position={Position.Left}  className="file-node__handle" />
       <Handle type="source" position={Position.Right} className="file-node__handle" />
 
@@ -47,9 +45,17 @@ const FileNode = memo(({ data, selected }) => {
       <span className="file-node__stripe" style={{ background: colour }} />
 
       <div className="file-node__body">
-        <span className="file-node__label truncate" title={data.label}>
-          {data.label}
-        </span>
+        <div className="file-node__title-row">
+          <span className="file-node__label truncate" title={data.label}>
+            {data.label}
+          </span>
+          {isHotspot && (
+            <span className="file-node__hotspot-badge" title={`High modification churn: ${data.churn} commits`}>
+              <Flame size={10} fill="#f97316" />
+              <span>Hot</span>
+            </span>
+          )}
+        </div>
         <div className="file-node__meta">
           <span className="file-node__badge" style={{ color: colour, borderColor: colour + '55' }}>
             {data.fileType}

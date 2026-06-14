@@ -126,3 +126,41 @@
   line-height: 1.65;
 }
 .canvas-empty__sub strong { color: #333355; font-weight: 600; }
+
+/* ── Hover Highlighting Rules ── */
+.node-highlighted {
+  opacity: 1 !important;
+  transform: scale(1.02);
+  z-index: 1000 !important;
+}
+
+.node-dimmed {
+  opacity: 0.22 !important;
+  filter: grayscale(40%) blur(0.3px);
+  pointer-events: none;
+}
+
+.node-group-transparent {
+  opacity: 0.95 !important;
+}
+
+.edge-highlighted path.react-flow__edge-path {
+  stroke: #a855f7 !important;
+  stroke-width: 3px !important;
+  stroke-dasharray: 5;
+  animation: dash 1s linear infinite;
+  opacity: 1 !important;
+}
+
+.edge-dimmed {
+  opacity: 0.08 !important;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
