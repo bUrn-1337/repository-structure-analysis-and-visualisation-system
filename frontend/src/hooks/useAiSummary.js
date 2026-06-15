@@ -1,11 +1,5 @@
 /**
- * useAiSummary.js – Hook that fetches an AI explanation for a single file.
- *
- * Security:
- * - filepath and scanRoot are sent as JSON body over the Vite dev-proxy
- *   (localhost only). No credentials are transmitted.
- * - Error detail is stored as a plain string — never injected as HTML.
- * - TODO(security): Add request auth headers before production deployment.
+ * Custom hook to fetch and manage the AI-generated summary for a file.
  */
 import { useState, useCallback, useRef } from 'react';
 import axios from 'axios';

@@ -115,17 +115,25 @@
 .canvas-empty__title {
   font-size: 16px;
   font-weight: 600;
-  color: #2a2a45;
+  color: #c8c8e0;
 }
 
 .canvas-empty__sub {
   font-size: 12.5px;
-  color: #222236;
+  color: #8888aa;
   text-align: center;
   max-width: 300px;
   line-height: 1.65;
 }
-.canvas-empty__sub strong { color: #333355; font-weight: 600; }
+.canvas-empty__sub strong { color: #b0b0d0; font-weight: 600; }
+.canvas-empty__sub code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
 
 /* ── Hover Highlighting Rules ── */
 .node-highlighted {

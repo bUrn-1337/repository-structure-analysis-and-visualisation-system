@@ -1,7 +1,5 @@
 /**
- * SidePanel.jsx – Collapsible right panel for selected-file details + AI summary.
- *
- * Security: Escapes details rendering via React JSX text content interpolation.
+ * Collapsible side panel for selected file details and the AI summary.
  */
 import { X, FileCode2, Hash, Tag, Sparkles, ChevronRight, RefreshCw, Zap, Flame } from 'lucide-react';
 import './SidePanel.css';
@@ -144,7 +142,7 @@ export default function SidePanel({
                     </span>
                   )}
                   {!aiSummary && !aiLoading && !aiError && (
-                    <span className="panel-ai__badge">powered by Gemini</span>
+                    <span className="panel-ai__badge">powered by Groq</span>
                   )}
                 </div>
 

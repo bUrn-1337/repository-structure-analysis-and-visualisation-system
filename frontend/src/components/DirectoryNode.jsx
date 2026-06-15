@@ -1,7 +1,5 @@
 /**
- * DirectoryNode.jsx – Custom React Flow group node representing a directory bounding box.
- *
- * Security: Escapes folder labels via React JSX text content rendering.
+ * Custom React Flow group node representing a directory bounding box.
  */
 import { memo } from 'react';
 import { Folder } from 'lucide-react';

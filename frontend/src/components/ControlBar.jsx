@@ -1,9 +1,5 @@
 /**
- * ControlBar.jsx – Floating top control bar.
- *
- * Security: Input value is controlled React state passed to the hook's scan()
- * function — never injected as HTML. Error message is rendered via JSX
- * textContent only (AlertCircle + <span>), not via dangerouslySetInnerHTML.
+ * Control bar component containing the directory input and scan controls.
  */
 import { useState } from 'react';
 import { FolderSearch, Loader2, AlertCircle, GitFork, Cpu } from 'lucide-react';
@@ -39,13 +35,14 @@ export default function ControlBar({ onScan, loading, error }) {
               id="repo-path-input"
               className="ctrl-input"
               type="text"
-              placeholder="Enter absolute directory path…"
+              placeholder="/projects/my-repo"
               value={path}
               onChange={(e) => setPath(e.target.value)}
               aria-label="Repository path"
               disabled={loading}
               autoComplete="off"
               spellCheck={false}
+              title="Enter the path as seen by the server. In Docker, /home/… is mounted at /projects/…"
             />
           </div>
 
@@ -84,7 +81,7 @@ export default function ControlBar({ onScan, loading, error }) {
         </a>
       </div>
 
-      {/* Error banner — text only, never innerHTML */}
+      {/* Error banner */}
       {error && (
         <div className="ctrl-error" role="alert" aria-live="polite">
           <AlertCircle size={14} strokeWidth={2} />

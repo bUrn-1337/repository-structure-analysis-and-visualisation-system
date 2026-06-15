@@ -1,19 +1,5 @@
 """
-main.py – FastAPI application entry point.
-
-Security controls implemented:
-- Strict CORS: only http://localhost:3000 is allowed (CWE-942).
-- Path-traversal protection in /api/explain uses os.path.commonpath (CWE-22).
-- Security response headers added via middleware (X-Content-Type-Options,
-  X-Frame-Options, Content-Security-Policy, Permissions-Policy).
-- Generic error messages returned to the client; details logged server-side.
-- AI API key read exclusively from environment; never hardcoded (CWE-321).
-- Rate limiting: TODO(security) – Add a rate-limiting middleware (e.g.,
-  slowapi) before deploying to production to prevent DoS.
-- Authentication: TODO(security) – This API is unauthenticated. Add API-key
-  or OAuth2 authentication before exposing outside localhost.
-- The server binds to 127.0.0.1 only when run via __main__ to prevent
-  accidental exposure on 0.0.0.0.
+FastAPI application defining the API endpoints for RepoScope.
 """
 
 import logging
@@ -57,7 +43,7 @@ app = FastAPI(
 )
 
 # ---------------------------------------------------------------------------
-# CORS – strict allow-list (CWE-942)
+# CORS configuration
 # ---------------------------------------------------------------------------
 ALLOWED_ORIGINS: list[str] = [
     "http://localhost:3000",
@@ -73,11 +59,11 @@ app.add_middleware(
 
 
 # ---------------------------------------------------------------------------
-# Security response-header middleware
+# Response-header middleware
 # ---------------------------------------------------------------------------
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next: Any) -> Response:
-    """Attach security headers to every outgoing response."""
+    """Attach headers to every outgoing response."""
     response: Response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -114,8 +100,7 @@ async def scan(
     - **edges** – one entry per detected dependency between files.
 
     Errors surface as HTTP 400 (bad input) or 500 (unexpected server error).
-    Detailed diagnostics are logged server-side only – never exposed to the
-    caller (CWE-209).
+    Detailed diagnostics are logged server-side only.
     """
     logger.info("Received scan request for path: %r", path)
     try:
@@ -131,7 +116,7 @@ async def scan(
             detail="Permission denied: the server cannot read the specified path.",
         ) from exc
     except Exception as exc:  # pylint: disable=broad-except
-        # Log the real error but return a generic message (CWE-209).
+        # Log the actual error details and return a generic user-friendly message
         logger.exception("Unexpected error while scanning %r: %s", path, exc)
         raise HTTPException(
             status_code=500,
@@ -165,18 +150,10 @@ class ExplainRequest(BaseModel):
 async def explain(body: ExplainRequest) -> JSONResponse:
     """
     Return a 3-sentence AI-generated summary of the requested file.
-
-    Security:
-    - *filepath* is resolved and bounded to *scan_root* using
-      os.path.commonpath — identical to the guard in parser.py (CWE-22).
-    - File content is read with a hard 1 MB size cap before being sent to
-      the AI API to prevent runaway costs / memory exhaustion.
-    - Real errors are logged server-side; only generic messages go to the
-      client (CWE-209).
     """
     logger.info("Explain request: %r (root=%r)", body.filepath, body.scan_root)
 
-    # ── Path-traversal guard (CWE-22) ──────────────────────────────────────
+    # ── Path-traversal validation ──────────────────────────────────────
     try:
         root_resolved = Path(body.scan_root).resolve()
         file_resolved = Path(body.filepath).resolve()
@@ -240,7 +217,18 @@ async def explain(body: ExplainRequest) -> JSONResponse:
         logger.error("AI service config error: %s", exc)
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:  # pylint: disable=broad-except
+        exc_str = str(exc)
         logger.exception("AI API error for %r: %s", body.filepath, exc)
+        if "401" in exc_str or "invalid_api_key" in exc_str or "authentication" in exc_str.lower():
+            raise HTTPException(
+                status_code=503,
+                detail="Groq API key is invalid. Set a valid GROQ_API_KEY in backend/.env and restart.",
+            ) from exc
+        if "429" in exc_str or "rate_limit" in exc_str.lower():
+            raise HTTPException(
+                status_code=429,
+                detail="Groq rate limit reached. Wait a moment and try again.",
+            ) from exc
         raise HTTPException(
             status_code=502,
             detail="The AI service returned an error. Please try again.",
@@ -267,8 +255,6 @@ async def health() -> dict[str, str]:
 if __name__ == "__main__":
     import uvicorn
 
-    # TODO(security): In production, run behind a reverse-proxy (e.g. nginx)
-    # with TLS termination instead of using uvicorn directly.
     host = os.environ.get("BIND_HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
     uvicorn.run("main:app", host=host, port=port, reload=False)

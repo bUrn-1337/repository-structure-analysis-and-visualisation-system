@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv
+env
+venv
+.env
+ai_cache.db
+ai_cache.db-shm
+ai_cache.db-wal
+.git
+.gitignore

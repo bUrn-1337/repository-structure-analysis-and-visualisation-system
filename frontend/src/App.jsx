@@ -1,10 +1,6 @@
 /**
- * App.jsx – Root application component.
- *
- * Layout: full-screen canvas (React Flow) + floating ControlBar +
- *         collapsible SidePanel on the right.
- *
- * Security: Wires sanitised event handlers; no unsafe HTML injection.
+ * Root application component.
+ * Layout: full-screen canvas (React Flow) + floating ControlBar + collapsible SidePanel.
  */
 import { useCallback, useState } from 'react';
 import {
@@ -167,7 +163,7 @@ export default function App() {
           onNodeMouseLeave={onNodeMouseLeave}
           nodeTypes={NODE_TYPES}
           fitView
-          fitViewOptions={{ padding: 0.18, maxZoom: 1.4 }}
+          fitViewOptions={{ padding: 0.08, maxZoom: 1.2 }}
           minZoom={0.08}
           maxZoom={3}
           className="rf-canvas"
@@ -224,7 +220,9 @@ export default function App() {
             </svg>
             <p className="canvas-empty__title">Scan a repository to begin</p>
             <p className="canvas-empty__sub">
-              Enter an absolute directory path above and click <strong>Scan Repository</strong>.
+              Enter a directory path and click <strong>Scan Repository</strong>.
+              When running via Docker, your local <code>/home/…</code> paths are
+              accessible as <code>/projects/…</code>
             </p>
           </div>
         )}

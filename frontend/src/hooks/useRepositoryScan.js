@@ -1,12 +1,5 @@
 /**
- * useRepositoryScan.js – Custom hook that drives the backend scan API call.
- *
- * Security:
- * - Path is sent as a URL query parameter over localhost (dev proxy).
- * - No credentials are transmitted; HTTPS enforced in production via proxy.
- * - Error details from the server are surfaced to the UI only as plain strings
- *   (never injected as HTML) to prevent reflected XSS.
- * - TODO(security): In production add request authentication headers here.
+ * Custom hook to scan a repository and fetch the layout nodes and edges.
  */
 import { useState, useCallback } from 'react';
 import axios from 'axios';
@@ -21,11 +14,13 @@ import { applyDagreLayout } from '../utils/layout';
 function transform(data) {
   const rfNodes = data.nodes.map((n) => ({
     id: n.id,
-    type: 'fileNode',
+    type: n.type || 'fileNode',
+    parentId: n.parentId,
     data: {
       label:    n.data.label,
       loc:      n.data.loc,
-      fileType: n.data.type,
+      fileType: n.data.fileType,
+      churn:    n.data.churn,
       path:     n.id,
     },
     // Position placeholder — Dagre will overwrite these.
@@ -37,8 +32,8 @@ function transform(data) {
     source:       e.source,
     target:       e.target,
     animated:     false,
-    style:        { stroke: '#7c3aed', strokeWidth: 1.5, opacity: 0.7 },
-    markerEnd:    { type: 'arrowclosed', color: '#7c3aed', width: 14, height: 14 },
+    style:        { stroke: '#7c3aed', strokeWidth: 2, opacity: 0.55 },
+    markerEnd:    { type: 'arrowclosed', color: '#a855f7', width: 16, height: 16 },
   }));
 
   return applyDagreLayout(rfNodes, rfEdges);
@@ -86,7 +81,6 @@ export function useRepositoryScan() {
         err?.response?.data?.detail ||
         err?.message ||
         'An unknown error occurred.';
-      // Only plain-string detail is stored; never set as innerHTML.
       setError(String(detail));
       setNodes([]);
       setEdges([]);

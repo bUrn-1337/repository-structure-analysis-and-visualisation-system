@@ -89,7 +89,7 @@
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.ctrl-input::placeholder { color: #444460; }
+.ctrl-input::placeholder { color: #606090; }
 .ctrl-input:focus {
   border-color: rgba(168, 85, 247, 0.6);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);

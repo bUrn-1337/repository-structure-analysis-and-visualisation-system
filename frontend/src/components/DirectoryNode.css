@@ -2,33 +2,38 @@
 .directory-node {
   width: 100%;
   height: 100%;
-  border: 1.5px dashed rgba(124, 58, 237, 0.22);
-  border-radius: 12px;
-  background: rgba(13, 13, 26, 0.12);
-  backdrop-filter: blur(4px);
-  pointer-events: none; /* Allows canvas clicks to pass through to child nodes */
+  border: 2px solid rgba(124, 58, 237, 0.45);
+  border-radius: 16px;
+  background: linear-gradient(
+    145deg,
+    rgba(124, 58, 237, 0.07) 0%,
+    rgba(139, 92, 246, 0.04) 100%
+  );
+  backdrop-filter: blur(2px);
+  pointer-events: none;
   position: relative;
-  transition: border-color 0.25s ease, background-color 0.25s ease;
+  transition: border-color 0.25s ease, background 0.25s ease;
 }
 
 .directory-node__header {
   position: absolute;
-  top: -12px;
-  left: 14px;
+  top: -14px;
+  left: 16px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: #151528;
-  border: 1px solid rgba(124, 58, 237, 0.35);
-  border-radius: 6px;
-  padding: 2px 8px;
+  gap: 6px;
+  background: #1a1a2e;
+  border: 1.5px solid rgba(124, 58, 237, 0.6);
+  border-radius: 8px;
+  padding: 3px 10px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: #c084fc;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  pointer-events: auto; /* Re-enables interaction on the header label itself */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 0 12px rgba(124, 58, 237, 0.2);
+  pointer-events: auto;
   z-index: 10;
+  white-space: nowrap;
 }
 
 .directory-node__icon {
@@ -36,8 +41,11 @@
   flex-shrink: 0;
 }
 
-/* Bounding box hover highlights */
 .directory-node:hover {
-  border-color: rgba(168, 85, 247, 0.45);
-  background: rgba(124, 58, 237, 0.04);
+  border-color: rgba(168, 85, 247, 0.75);
+  background: linear-gradient(
+    145deg,
+    rgba(124, 58, 237, 0.11) 0%,
+    rgba(139, 92, 246, 0.07) 100%
+  );
 }
