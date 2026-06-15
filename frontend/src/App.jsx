@@ -1,8 +1,4 @@
-/**
- * Root application component.
- * Layout: full-screen canvas (React Flow) + floating ControlBar + collapsible SidePanel.
- */
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useLayoutEffect, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -23,11 +19,25 @@ import FileNode   from './components/FileNode';
 import DirectoryNode from './components/DirectoryNode';
 import './App.css';
 
-/** Register custom node types */
-const NODE_TYPES = { 
+const NODE_TYPES = {
   fileNode: FileNode,
   directoryNode: DirectoryNode,
 };
+
+// Dynamic style classes — must be stripped before re-applying to prevent
+// className accumulation when React Flow writes nodes back via onNodesChange.
+const NODE_STYLE_CLASSES = new Set(['node-highlighted', 'node-dimmed', 'node-group-transparent']);
+const EDGE_STYLE_CLASSES = new Set(['edge-highlighted', 'edge-dimmed']);
+
+function stripNodeClass(cls) {
+  if (!cls) return '';
+  return cls.split(' ').filter(c => !NODE_STYLE_CLASSES.has(c)).join(' ').trim();
+}
+
+function stripEdgeClass(cls) {
+  if (!cls) return '';
+  return cls.split(' ').filter(c => !EDGE_STYLE_CLASSES.has(c)).join(' ').trim();
+}
 
 export default function App() {
   const { nodes: fetchedNodes, edges: fetchedEdges, loading, error, scan, scanRoot } =
@@ -43,22 +53,32 @@ export default function App() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [hoveredNode, setHoveredNode] = useState(null);
+  const [hoveredNode, setHoveredNode]    = useState(null);
+  const [rfInstance,  setRfInstance]     = useState(null);
 
-  // Keep React Flow state in sync with fresh scan results
-  const [prevFetched, setPrevFetched] = useState(null);
-  if (fetchedNodes !== prevFetched) {
-    setPrevFetched(fetchedNodes);
+  // Sync React Flow state when a new scan completes.
+  // useLayoutEffect runs before paint so there is no flash of empty content.
+  useLayoutEffect(() => {
     setNodes(fetchedNodes);
     setEdges(fetchedEdges);
-  }
+  }, [fetchedNodes, fetchedEdges]);
+
+  // Programmatic fitView — fires only when scan data changes, never on
+  // AI-loading re-renders. The 80 ms delay lets React Flow finish its own
+  // internal layout pass before we ask it to fit the viewport.
+  useEffect(() => {
+    if (!rfInstance || fetchedNodes.length === 0) return;
+    const id = setTimeout(() => {
+      rfInstance.fitView({ padding: 0.08, maxZoom: 1.2 });
+    }, 80);
+    return () => clearTimeout(id);
+  }, [rfInstance, fetchedNodes]);
 
   // Side panel
-  const [panelOpen,  setPanelOpen]  = useState(false);
+  const [panelOpen,    setPanelOpen]    = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   const onNodeClick = useCallback((_event, node) => {
-    // Ignore folder node clicks in the SidePanel inspector
     if (node.type === 'directoryNode') return;
 
     const fileRelPath = node.data.path || node.id;
@@ -75,28 +95,23 @@ export default function App() {
       churn:    node.data.churn,
     });
     setPanelOpen(true);
-
     resetAiSummary();
     if (scanRoot) {
       fetchAiSummary(absFilePath, scanRoot);
     }
   }, [scanRoot, fetchAiSummary, resetAiSummary]);
 
-  const closePanel = useCallback(() => {
-    setPanelOpen(false);
-  }, []);
+  const closePanel = useCallback(() => setPanelOpen(false), []);
 
-  // Hover highlighting node/edge calculations
   const onNodeMouseEnter = useCallback((_event, node) => {
     if (node.type === 'directoryNode') return;
     setHoveredNode(node.id);
   }, []);
 
-  const onNodeMouseLeave = useCallback(() => {
-    setHoveredNode(null);
-  }, []);
+  const onNodeMouseLeave = useCallback(() => setHoveredNode(null), []);
 
-  const getHighlightSets = useCallback(() => {
+  // Highlight sets — only recalculated when hover target or edge list changes.
+  const { highlightNodes, highlightEdges } = useMemo(() => {
     if (!hoveredNode) return { highlightNodes: null, highlightEdges: null };
 
     const hlNodes = new Set([hoveredNode]);
@@ -115,43 +130,51 @@ export default function App() {
     return { highlightNodes: hlNodes, highlightEdges: hlEdges };
   }, [hoveredNode, edges]);
 
-  const { highlightNodes, highlightEdges } = getHighlightSets();
+  // Styled nodes — memoized so React Flow only diffs when hover state or the
+  // underlying node list actually changes (not on every AI-loading re-render).
+  // Previous style classes are stripped first to prevent accumulation.
+  const styledNodes = useMemo(() => nodes.map((node) => {
+    const baseClass = stripNodeClass(node.className);
 
-  // Apply styling classes to nodes based on hover state
-  const styledNodes = nodes.map((node) => {
-    if (!hoveredNode) return node;
+    if (!hoveredNode) {
+      // Return same reference when nothing changed to help React Flow bail out early.
+      return baseClass === (node.className ?? '').trim()
+        ? node
+        : { ...node, className: baseClass || undefined };
+    }
 
-    const isHl = highlightNodes.has(node.id);
+    const isHl  = highlightNodes.has(node.id);
     const isDir = node.type === 'directoryNode';
+    const styleClass = isHl
+      ? 'node-highlighted'
+      : isDir ? 'node-group-transparent' : 'node-dimmed';
 
-    // We do not dim parent directory containers if they contain highlighted children
     return {
       ...node,
-      className: `${node.className || ''} ${
-        isHl ? 'node-highlighted' : isDir ? 'node-group-transparent' : 'node-dimmed'
-      }`.trim(),
+      className: [baseClass, styleClass].filter(Boolean).join(' '),
     };
-  });
+  }), [nodes, hoveredNode, highlightNodes]);
 
-  // Apply styling classes to edges based on hover state
-  const styledEdges = edges.map((edge) => {
-    if (!hoveredNode) return edge;
+  // Styled edges — memoized similarly.
+  const styledEdges = useMemo(() => edges.map((edge) => {
+    const baseClass = stripEdgeClass(edge.className);
+
+    if (!hoveredNode) {
+      return { ...edge, animated: false, className: baseClass || undefined };
+    }
 
     const isHl = highlightEdges.has(edge.id);
     return {
       ...edge,
       animated: isHl,
-      className: `${edge.className || ''} ${
-        isHl ? 'edge-highlighted' : 'edge-dimmed'
-      }`.trim(),
+      className: [baseClass, isHl ? 'edge-highlighted' : 'edge-dimmed'].filter(Boolean).join(' '),
     };
-  });
+  }), [edges, hoveredNode, highlightEdges]);
 
   const isEmpty = nodes.length === 0 && !loading;
 
   return (
     <div className="app-shell">
-      {/* Canvas */}
       <div className="canvas-area">
         <ReactFlow
           nodes={styledNodes}
@@ -161,9 +184,8 @@ export default function App() {
           onNodeClick={onNodeClick}
           onNodeMouseEnter={onNodeMouseEnter}
           onNodeMouseLeave={onNodeMouseLeave}
+          onInit={setRfInstance}
           nodeTypes={NODE_TYPES}
-          fitView
-          fitViewOptions={{ padding: 0.08, maxZoom: 1.2 }}
           minZoom={0.08}
           maxZoom={3}
           className="rf-canvas"
@@ -203,7 +225,9 @@ export default function App() {
           {nodes.length > 0 && (
             <Panel position="bottom-left" className="stats-panel">
               <span className="stats-pill">
-                {nodes.filter(n => n.type !== 'directoryNode').length} files &nbsp;·&nbsp; {edges.length} dependencies
+                {nodes.filter(n => n.type !== 'directoryNode').length} files
+                &nbsp;·&nbsp;
+                {edges.length} dependencies
               </span>
             </Panel>
           )}
