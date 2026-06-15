@@ -1,104 +1,128 @@
-# 🕸️ RepoScope: Repository Structure Analysis and Visualisation System
+# RepoScope: Repository Structure Analysis and Visualisation System
 
-An interactive analysis engine that parses local Git repositories to visually map out folder structures, inter-file dependencies, and code complexity metrics. Built with a React Flow frontend and a FastAPI backend, RepoScope makes it easy to onboard, refactor, and understand large codebases.
+An interactive analysis engine that parses local Git repositories to visually map folder structures, inter-file dependencies, and code complexity metrics. Built with a React Flow frontend and a FastAPI backend, RepoScope makes it easy to onboard, refactor, and understand large codebases.
 
 ---
 
-## 💡 Why RepoScope? (How it Compares)
+## Why RepoScope?
 
-While many online static analysis or AI tools require uploading codebases to external clouds or require heavy configurations, **RepoScope** runs entirely locally with zero-config.
-
-| Feature / Aspect | Online/SaaS Tools | RepoScope |
+| Feature | Online/SaaS Tools | RepoScope |
 | :--- | :--- | :--- |
-| **Data Privacy** | Code uploaded to external cloud servers | 100% local parsing and SQLite caching |
-| **Dependency Mapping** | Requires complex parser configuration | Automatic out-of-the-box Python and C/C++ parsing |
-| **LLM Summarisation Cost** | Paid per API request with no cache mechanism | Local SHA-256 content-hash caching (renames/moves don't duplicate costs) |
-| **Git Churn Context** | Static visualisations ignoring history | Integrates Git log metrics to highlight high-frequency refactoring zones |
+| **Data Privacy** | Code uploaded to external servers | 100% local parsing, SQLite caching |
+| **Dependency Mapping** | Requires complex configuration | Auto-detected for Python, C/C++, JS/TS |
+| **AI Summarisation Cost** | Paid per request, no cache | SHA-256 content-hash cache — renames don't cost extra |
+| **Git Context** | Static diagrams, ignores history | Git churn metrics highlight high-frequency files |
 
 ---
 
-## ✨ Key Features
+## Features
 
-* **Interactive Dependency Graph:** Automatically parses Python (`import` statements) and C/C++ (`#include` directives) to trace architectural hierarchies.
-* **Auto-Layout Canvas:** Utilizes React Flow and Dagre to render a clean, Left-to-Right draggable and zoomable infinite canvas.
-* **Visual Git Hotspots:** Inspects repository history using local Git logs, highlighting complex files with high modification churn (10+ commits) with a flame icon.
-* **Animated Dependency Pathways:** Hovering over a file dims the rest of the canvas and highlights all direct imports and dependents using animated glowing edges.
-* **Content-Addressed AI Summarization:** Click any file node to request a concise, 3-sentence summary of what the code does, powered by Gemini.
-* **Double-Layer SQLite Cache:** AI summaries are keyed against the SHA-256 of raw file bytes. If you rename or move a file without changing its contents, RepoScope retrieves the cached explanation instantly, saving LLM tokens.
-* **Strict Security Bounding:** Implements path-traversal protection (using resolved path checks) and limits file reads to 1 MB and prompt sizes to 12 KB to prevent runaway token costs or memory exhaustion.
-
----
-
-## 🏗️ Architecture Stack
-
-* **Frontend:** React, Vite, React Flow (`@xyflow/react`), Axios, Lucide Icons.
-* **Backend:** Python, FastAPI, Uvicorn, SQLite.
-* **AI Integration:** Google Generative AI SDK (powered by `gemini-2.5-flash` or custom overrides).
+- **Interactive Dependency Graph** — Parses Python (`import`), C/C++ (`#include`), and JavaScript/TypeScript (`import`/`require`) to map architectural relationships as a draggable, zoomable canvas.
+- **Auto Dagre Layout** — Left-to-right hierarchical layout via Dagre, with files grouped inside their directory containers.
+- **Git Hotspot Detection** — Reads `git log` for each file and badges files with 10+ commits with a flame icon.
+- **Hover Highlighting** — Hovering a node dims the rest of the canvas and animates its direct dependency edges.
+- **AI File Summaries** — Click any node to get a 3-sentence plain-English explanation of what the file does, powered by Groq (llama-3.1-8b-instant).
+- **SQLite Cache** — AI summaries are keyed by SHA-256 of file bytes. Renaming or moving a file without changing content returns the cached result instantly.
+- **Path-Traversal Protection** — All file paths are resolved and validated to stay within the scanned root. Files over 1 MB are blocked; prompts are capped at 12 KB.
 
 ---
 
-## 🚀 How to Run
+## Tech Stack
 
-### Method 1: Using Docker Compose (Recommended)
+| Layer | Technology |
+| :--- | :--- |
+| Frontend | React 19, Vite, `@xyflow/react`, Dagre, Axios, Lucide Icons |
+| Backend | Python 3.11, FastAPI, Uvicorn |
+| AI | Groq API (`llama-3.1-8b-instant`) |
+| Cache | SQLite (content-hash keyed) |
+| Infrastructure | Docker, Docker Compose |
 
-Ensure you have Docker and Docker Compose installed.
+---
 
-1. Create a `.env` file inside the `backend/` directory:
+## API Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/scan?path=<dir>` | Scan a directory — returns nodes and edges for React Flow |
+| `POST` | `/api/explain` | Get a 3-sentence AI summary for a file |
+| `GET` | `/health` | Liveness probe |
+
+Full interactive docs available at `http://localhost:8000/docs` when running.
+
+---
+
+## Getting Started
+
+### Docker (Recommended)
+
+1. Get a free Groq API key at [console.groq.com](https://console.groq.com)
+
+2. Create `backend/.env`:
    ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
+   GROQ_API_KEY=gsk_your_key_here
    ```
-2. Run the application from the root directory:
+
+3. Start the stack:
    ```bash
    docker compose up -d
    ```
-3. Open your browser to `http://localhost:3000`.
 
-> [!NOTE]  
-> The Docker container mounts `/home/burn/projects` on the host to `/projects` inside the container. To scan your local projects, prefix the path with `/projects/` (e.g. enter `/projects/repository-structure-analysis-and-visualisation-system` in the search bar).
+4. Open `http://localhost:3000`
+
+> **Docker path note:** The container mounts `/home/burn/projects` on the host to `/projects` inside Docker. Enter paths as `/projects/my-repo`, not `/home/burn/projects/my-repo`.
 
 ---
 
-### Method 2: Local Installation (Bare-metal)
+### Local (Bare-metal)
 
-#### 1. Backend Setup
-Navigate to the backend directory, set up your virtual environment, and install dependencies:
+**Backend:**
 ```bash
 cd backend
 python -m venv .venv
-
-# Activate virtual environment
-# On Windows: .venv\Scripts\activate
-# On macOS/Linux: source .venv/bin/activate
-
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-Create a `.env` file in the `backend/` directory:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Start the FastAPI server:
-```bash
+# Create backend/.env with your Groq key
 uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-#### 2. Frontend Setup
-In a new terminal window, navigate to the frontend directory, install dependencies, and start the development server:
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` in your web browser.
+Open `http://localhost:3000`.
 
 ---
 
-## 🛡️ Verification Assumptions & Safeguards
+## Scanning a Repository
 
-To verify the correct functionality, keep in mind the following internal behaviors:
-1. **Git Metrics:** Git modification metrics are calculated by calling the local `git log` command. Verification expects that the target folder being scanned is a valid Git repository with commit history.
-2. **Path Resolution:** The backend enforces resolved path verification. Path arguments must be absolute paths within the configured container volume mounts (if using Docker) or accessible local directories (if running bare-metal).
-3. **Lazy API Load:** The Gemini API client configuration is loaded lazily. If `GEMINI_API_KEY` is missing, the backend will fail-fast with a `503 Service Unavailable` error when trying to summarize files, rather than silently ignoring it.
-4. **Token Cost Mitigation:** Files exceeding 1 MB are blocked from explanation, and code content is truncated to 12 KB before prompting, ensuring predictable token usage.
+1. Enter an absolute path in the top bar (e.g. `/projects/FERN`)
+2. Click **Scan Repository**
+3. The graph renders with files as nodes and imports/includes as edges
+4. Click any file node to open the File Inspector and load the AI summary
+5. Hover over any node to highlight its dependency chain
+
+---
+
+## Supported Languages
+
+| Language | Dependency Detection |
+| :--- | :--- |
+| Python | `import` / `from … import` |
+| C / C++ | `#include "…"` (local) and `#include <…>` (stdlib) |
+| JavaScript / JSX | ES6 `import` and `require()` (relative paths) |
+| TypeScript / TSX | ES6 `import` and `require()` (relative paths) |
+| Others (Go, Rust, Java, etc.) | Scanned and shown as nodes; dependency edges not yet extracted |
+
+---
+
+## Safeguards
+
+1. **Git safe.directory** — The backend passes `-c safe.directory=*` to git so Docker volume mounts (owned by the host user) are read correctly.
+2. **Path resolution** — `filepath` in `/api/explain` is checked against `scan_root` using `os.path.commonpath`; anything outside is rejected with HTTP 400.
+3. **File size cap** — Files over 1 MB are rejected at the explain endpoint; prompt content is truncated to 12 KB.
+4. **AI cache** — Cached summaries are stored in `backend/ai_cache.db`. Delete the file or run `DELETE FROM summaries;` to force a fresh analysis.
+5. **Lazy key check** — Groq client is initialised on first request. A missing or placeholder key returns HTTP 503 with an actionable error message.
